@@ -22,5 +22,21 @@ jobs:
           pip install -r requirements.txt
       - name: Run tests
         run: python -m pytest
-      - name : Build Docker image
-        run: docker build -t my-image:latest .
+      
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ secrets.WIF_PROVIDER }}
+          service_account: ${{ secrets.SERVICE_ACCOUNT }}
+      - name: Set up Cloud SDK
+        uses: google-github-actions/setup-gcloud@v2
+      - name: Configure Docker
+        run: gcloud auth configure-docker us-central1-docker.pkg.dev
+      
+      - name: Build Docker image
+        run: |
+          docker build -t us-central1-docker.pkg.dev/gcptest-500709/book-api-repo/book-api:latest .
+
+      - name: Push Docker image
+        run: |
+          docker push us-central1-docker.pkg.dev/gcptest-500709/book-api-repo/book-api:latest
