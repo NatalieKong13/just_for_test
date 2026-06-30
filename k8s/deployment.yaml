@@ -13,7 +13,34 @@ spec:
         app: devops-book-api
     spec:
       containers:
-        - name: devops-book-api
-          image: us-central1-docker.pkg.dev/gcptest-500709/book-api-repo/book-api:latest
-          ports:
-            - containerPort: 8000
+      - name: devops-book-api
+        image: image: us-central1-docker.pkg.dev/gcptest-500709/book-api-repo/book-api:latest
+
+        env:
+          - name: APP_VERSION
+            valueFrom:
+              configMapKeyRef:
+                name: book-api-config
+                key: APP_VERSION
+
+        ports:
+          - containerPort: 8000
+
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 8000
+
+          initialDelaySeconds: 5
+          periodSeconds: 10
+          timeoutSeconds: 2
+          failureThreshold: 3
+
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 8000
+          initialDelaySeconds: 15
+          periodSeconds: 20
+          timeoutSeconds: 2
+          failureThreshold: 3

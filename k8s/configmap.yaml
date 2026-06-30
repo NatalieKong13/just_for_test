@@ -1,0 +1,9 @@
+apiVersion: v1
+kind: ConfigMap
+
+metadata:
+  name: book-api-config
+
+data:
+  APP_VERSION: "3.0.0"
+  LOG_LEVEL: "INFO"
