@@ -14,7 +14,7 @@ def health():
 
 @app.get("/version")
 def version():
-    return {"version": "2.0.0"}
+    return {"version": "3.0.0"}
 
 @app.get("/books")
 def get_books():

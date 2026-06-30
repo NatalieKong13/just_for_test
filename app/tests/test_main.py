@@ -11,7 +11,7 @@ def test_health():
 def test_version():
     response = client.get("/version")
     assert response.status_code == 200
-    assert response.json() == {"version": "2.0.0"}
+    assert response.json() == {"version": "3.0.0"}
 
 def test_get_books():
     response = client.get("/books")
