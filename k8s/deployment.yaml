@@ -1,0 +1,19 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: devops-book-api
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: devops-book-api
+  template:
+    metadata:
+      labels:
+        app: devops-book-api
+    spec:
+      containers:
+        - name: devops-book-api
+          image: us-central1-docker.pkg.dev/gcptest-500709/book-api-repo/book-api:latest
+          ports:
+            - containerPort: 8000

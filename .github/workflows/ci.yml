@@ -1,4 +1,4 @@
-name: CI Pipeline
+name: CI/CD Pipeline
 
 on:
   push:
@@ -9,8 +9,17 @@ permissions:
   contents: read
   id-token: write
 
+env:
+  PROJECT_ID: gcptest-500709
+  REGION: us-central1
+  REPOSITORY: book-api-repo
+  IMAGE: book-api
+  CLUSTER: book-api-cluster
+  DEPLOYMENT: devops-book-api
+  CONTAINER: devops-book-api
+
 jobs:
-  test:
+  test-build-deploy:
     runs-on: ubuntu-latest
 
     steps:
@@ -21,26 +30,44 @@ jobs:
         uses: actions/setup-python@v4
         with:
           python-version: '3.12'
+
       - name: Install dependencies
-        run: 
-          pip install -r requirements.txt
+        run: pip install -r requirements.txt
+
       - name: Run tests
         run: python -m pytest
-      
+
       - name: Authenticate to Google Cloud
         uses: google-github-actions/auth@v2
         with:
           workload_identity_provider: ${{ secrets.WIF_PROVIDER }}
           service_account: ${{ secrets.SERVICE_ACCOUNT }}
+
       - name: Set up Cloud SDK
         uses: google-github-actions/setup-gcloud@v2
+
       - name: Configure Docker
-        run: gcloud auth configure-docker us-central1-docker.pkg.dev
-      
+        run: gcloud auth configure-docker $REGION-docker.pkg.dev
+
       - name: Build Docker image
         run: |
-          docker build -t us-central1-docker.pkg.dev/gcptest-500709/book-api-repo/book-api:latest .
+          docker build -t $REGION-docker.pkg.dev/$PROJECT_ID/$REPOSITORY/$IMAGE:${{ github.sha }} .
 
       - name: Push Docker image
         run: |
-          docker push us-central1-docker.pkg.dev/gcptest-500709/book-api-repo/book-api:latest
+          docker push $REGION-docker.pkg.dev/$PROJECT_ID/$REPOSITORY/$IMAGE:${{ github.sha }}
+
+      - name: Get GKE credentials
+        run: |
+          gcloud container clusters get-credentials $CLUSTER \
+            --region $REGION \
+            --project $PROJECT_ID
+
+      - name: Deploy to GKE
+        run: |
+          kubectl set image deployment/$DEPLOYMENT \
+            $CONTAINER=$REGION-docker.pkg.dev/$PROJECT_ID/$REPOSITORY/$IMAGE:${{ github.sha }}
+
+      - name: Wait for rollout
+        run: |
+          kubectl rollout status deployment/$DEPLOYMENT
